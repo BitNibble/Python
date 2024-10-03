@@ -1,0 +1,10 @@
+python duplicate_remover.py /path/to/location .txt 3
+
+python gui.py
+
+pythonw duplicate_remover_main.py
+
+
+
+
+

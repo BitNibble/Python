@@ -1,0 +1,6 @@
+Run in Windows Shell (cmd):
+pip install pygame
+
+Includes:
+import pygame
+

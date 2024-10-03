@@ -1,0 +1,215 @@
+Certainly! Below is a Python implementation that closely follows the logic of your Bash script. This version finds duplicate files based on their extension, compares their content, and removes the one that is lower in the directory hierarchy.
+
+### Python Script to Remove Duplicate Files
+
+```python
+import os
+import sys
+import hashlib
+
+def get_file_hash(file_path):
+    """Generate a hash for a file to compare its content."""
+    hasher = hashlib.md5()
+    with open(file_path, 'rb') as f:
+        while chunk := f.read(8192):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+def find_duplicates(location, extension, depth):
+    """Find duplicate files with the specified extension up to the given depth."""
+    file_dict = {}
+    for root, dirs, files in os.walk(location):
+        current_depth = root.count(os.sep) - location.count(os.sep)
+        if current_depth > depth:
+            continue
+        for file in files:
+            if file.lower().endswith(extension.lower()):
+                file_path = os.path.join(root, file)
+                file_hash = get_file_hash(file_path)
+                if file_hash in file_dict:
+                    file_dict[file_hash].append(file_path)
+                else:
+                    file_dict[file_hash] = [file_path]
+    return {k: v for k, v in file_dict.items() if len(v) > 1}
+
+def remove_duplicates(duplicates):
+    """Remove duplicate files, keeping the one higher in the directory tree."""
+    for file_hash, file_paths in duplicates.items():
+        # Sort paths to ensure we remove the one lower in the hierarchy
+        file_paths.sort(key=lambda x: x.count(os.sep))
+        # Remove all but the first file in the sorted list
+        for file_path in file_paths[1:]:
+            print(f"Removing duplicate file: {file_path}")
+            os.remove(file_path)
+
+def main(location, extension, depth):
+    if not os.path.isdir(location):
+        print(f"Folder '{location}' does not exist!")
+        sys.exit(1)
+
+    duplicates = find_duplicates(location, extension, depth)
+    if not duplicates:
+        print("No duplicates found.")
+        return
+    
+    print(f"Found {sum(len(v) for v in duplicates.values())} duplicates.")
+    remove_duplicates(duplicates)
+    print("Duplicate removal complete.")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        print("Usage: python script.py LOCATION EXTENSION DEPTH")
+        sys.exit(1)
+
+    location = sys.argv[1]
+    extension = sys.argv[2]
+    try:
+        depth = int(sys.argv[3])
+    except ValueError:
+        print("Depth must be an integer.")
+        sys.exit(1)
+
+    if depth < 0:
+        print("Depth must be a non-negative integer.")
+        sys.exit(1)
+
+    main(location, extension, depth)
+```
+
+### Explanation of the Script
+
+1. **Hashing Function**: 
+   - The `get_file_hash` function generates an MD5 hash for each file. This allows for efficient content comparison.
+
+2. **Finding Duplicates**: 
+   - The `find_duplicates` function walks through the directory structure, collecting files that match the given extension and organizing them by their hash.
+
+3. **Removing Duplicates**: 
+   - The `remove_duplicates` function sorts the duplicate file paths by their depth (number of directory separators) and removes the ones lower in the hierarchy.
+
+4. **Main Function**: 
+   - Handles argument parsing and initiates the duplicate finding and removal process.
+
+### Usage
+To run the script, use the command line as follows:
+
+```bash
+python script.py /path/to/location .txt 3
+```
+
+### Additional Notes
+- Make sure to test this script in a safe environment before running it on important files, as it permanently deletes files.
+- You might consider enhancing the script with logging and more robust error handling for production use.
+/******************************************************************************************/
+The behavior you're experiencing is due to how the event bindings are set up in the Tkinter GUI. When a popup window appears (like a message box) due to mouse clicks or key presses, it interrupts the main event loop and can prevent other interactions from occurring until the popup is closed. This can lead to a situation where the button doesn't get pressed properly if the focus is lost due to frequent popups.
+
+To improve this, we can modify the event handling to prevent excessive popups and ensure that the button presses are handled correctly. Here are a couple of strategies to address this:
+
+### Solution 1: Use Flags to Limit Popups
+
+We can introduce a flag to limit how often popups are shown, allowing them to occur only under certain conditions (e.g., after a certain number of clicks).
+
+### Modified `event_handlers.py`
+
+Here's an updated version of the `event_handlers.py` file that incorporates a counter to limit the popups:
+
+```python
+# event_handlers.py
+import tkinter as tk
+from tkinter import messagebox
+
+# Counter to limit popups
+popup_counter = 0
+
+def on_mouse_click(event):
+    """Handle mouse click events, limiting the number of popups shown."""
+    global popup_counter
+    popup_counter += 1
+    if popup_counter % 5 == 0:  # Show a popup every 5 clicks
+        messagebox.showinfo("Mouse Clicked", f"You clicked at ({event.x}, {event.y})")
+
+def on_key_press(event):
+    """Handle key press events."""
+    messagebox.showinfo("Key Pressed", f"You pressed: {event.char}")
+
+def register_events(root):
+    """Register mouse and keyboard event handlers."""
+    root.bind("<Button-1>", on_mouse_click)  # Left mouse button click
+    root.bind("<KeyPress>", on_key_press)     # Key press event
+```
+
+### Solution 2: Remove Popups for Mouse Clicks
+
+If you prefer to keep the application focused on its main functionality (i.e., running the duplicate remover) without the popups interfering, you can completely remove the popup for mouse clicks:
+
+```python
+# event_handlers.py
+import tkinter as tk
+
+def on_mouse_click(event):
+    """Handle mouse click events, currently does nothing."""
+    pass  # No action taken for mouse clicks
+
+def on_key_press(event):
+    """Handle key press events."""
+    messagebox.showinfo("Key Pressed", f"You pressed: {event.char}")
+
+def register_events(root):
+    """Register mouse and keyboard event handlers."""
+    root.bind("<Button-1>", on_mouse_click)  # Left mouse button click
+    root.bind("<KeyPress>", on_key_press)     # Key press event
+```
+
+### Explanation of Changes:
+- In **Solution 1**, we keep a counter that increases with each mouse click and only show a popup every 5 clicks.
+- In **Solution 2**, we disable the mouse click popup altogether to keep the application focused on its main task.
+
+### Conclusion
+You can choose either of the above solutions based on your preference for user interaction. By doing this, you should be able to click the button without getting interrupted by excessive popups. Let me know if you need further adjustments!
+/************************************************************************************/
+Creating a standalone executable for your Python application can be accomplished using tools like **PyInstaller** or **cx_Freeze**. Below, I'll guide you through using PyInstaller, which is one of the most popular options.
+
+### Step-by-Step Guide to Create an Executable Using PyInstaller
+
+1. **Install PyInstaller**:
+   You can install PyInstaller using pip. Open your command prompt and run:
+   ```bash
+   pip install pyinstaller
+   ```
+
+2. **Organize Your Project**:
+   Make sure all your Python files are in the same directory. For instance, if your project consists of `duplicate_remover_main.py`, `gui.py`, `file_utils.py`, and `event_handlers.py`, ensure they're all in one folder.
+
+3. **Create the Executable**:
+   Navigate to the directory containing your main script in the command prompt. Then, run:
+   ```bash
+   pyinstaller --onefile --windowed duplicate_remover_main.py
+   ```
+   - `--onefile`: This option packages everything into a single executable file.
+   - `--windowed`: This option prevents a console window from appearing when you run the executable (suitable for GUI applications).
+
+4. **Locate the Executable**:
+   After running the command, PyInstaller creates a `dist` folder within your project directory. Inside this folder, you’ll find your executable named `duplicate_remover_main.exe`.
+
+5. **Run the Executable**:
+   You can now run this `.exe` file on any Windows machine that meets the Python package dependencies your application requires (e.g., Tkinter, hashlib). If you encounter any missing dependencies, you might need to install Python and the necessary libraries on that machine or package those libraries into your executable.
+
+### Additional Tips
+
+- **Icon**: If you want to add an icon to your executable, you can use the `--icon` option:
+  ```bash
+  pyinstaller --onefile --windowed --icon=youricon.ico duplicate_remover_main.py
+  ```
+  
+- **Testing**: Always test your executable on a different machine to ensure it runs correctly without requiring Python or other dependencies.
+
+- **Debugging**: If you encounter issues, you can run PyInstaller without the `--windowed` option to see the console output, which can help in debugging.
+
+### Example Command
+Here’s a full example command:
+```bash
+pyinstaller --onefile --windowed --icon=myicon.ico duplicate_remover_main.py
+```
+
+### Conclusion
+Following these steps will help you package your Python GUI application into a neat and portable executable file that can run on any Windows machine without needing to install Python or any additional libraries. Let me know if you need any more help!

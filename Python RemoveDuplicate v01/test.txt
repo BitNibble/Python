@@ -1,0 +1,22 @@
+# event_handlers.py
+import tkinter as tk
+from tkinter import messagebox
+
+# Counter to limit popups
+popup_counter = 0
+
+def on_mouse_click(event):
+    """Handle mouse click events, limiting the number of popups shown."""
+    global popup_counter
+    popup_counter += 1
+    if popup_counter % 5 == 0:  # Show a popup every 5 clicks
+        messagebox.showinfo("Mouse Clicked", f"You clicked at ({event.x}, {event.y})")
+
+def on_key_press(event):
+    """Handle key press events."""
+    messagebox.showinfo("Key Pressed", f"You pressed: {event.char}")
+
+def register_events(root):
+    """Register mouse and keyboard event handlers."""
+    root.bind("<Button-1>", on_mouse_click)  # Left mouse button click
+    root.bind("<KeyPress>", on_key_press)     # Key press event
