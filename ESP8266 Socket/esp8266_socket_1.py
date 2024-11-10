@@ -32,8 +32,8 @@ def disconnect_from_esp():
 root = tk.Tk()
 root.title("ESP8266 Controller")
 
-ESP_IP = "192.168.1.100"  # Replace with your ESP8266 IP address
-ESP_PORT = 8080  # Replace with the port your ESP8266 listens on
+ESP_IP = "192.168.1.53"  # Replace with your ESP8266 IP address
+ESP_PORT = 80  # Replace with the port your ESP8266 listens on
 
 client_socket = None
 
